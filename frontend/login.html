@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Sign In — SHEild</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .login-wrap {
+      min-height: calc(100vh - 64px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 40px 24px;
+    }
+    .login-card {
+      width:100%; max-width:460px;
+      background:var(--card); border:1px solid var(--border);
+      border-radius:var(--r-xl); padding:48px 44px;
+      backdrop-filter:blur(24px);
+      box-shadow:0 0 100px rgba(255,45,110,0.08), var(--shadow);
+    }
+    .login-shield {
+      width:72px; height:72px; border-radius:20px;
+      background:linear-gradient(135deg,var(--rose),var(--violet));
+      display:flex; align-items:center; justify-content:center;
+      font-size:34px; margin:0 auto 14px;
+      box-shadow:0 8px 32px var(--rose-glow);
+    }
+    .proof-strip {
+      display:flex; align-items:center; justify-content:center; gap:20px;
+      padding:14px 0; border-top:1px solid var(--border);
+      border-bottom:1px solid var(--border); margin-bottom:28px;
+    }
+    .proof-item{text-align:center}
+    .proof-num{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;color:var(--rose)}
+    .proof-lbl{font-size:11px;color:var(--text-muted);letter-spacing:1px}
+    .proof-sep{height:32px;width:1px;background:var(--border)}
+  </style>
+</head>
+<body>
+<div class="ambient"><div class="amb-1"></div><div class="amb-2"></div><div class="amb-3"></div></div>
+
+<nav class="navbar">
+  <a class="nav-brand" href="index.html">
+    <div class="nav-brand-icon">🛡</div>
+    <div class="nav-brand-text">SH<span>E</span>ild</div>
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="register.html">Register</a>
+  </div>
+  <div class="nav-toggle" id="navToggle"><span></span><span></span><span></span></div>
+</nav>
+
+<div class="page-wrap">
+  <div class="login-wrap">
+    <div class="login-card anim-scale">
+      <div class="tc" style="margin-bottom:28px;">
+        <div class="login-shield">🛡</div>
+        <h2 class="display-title" style="font-size:26px;margin-bottom:5px;">Welcome Back</h2>
+        <p style="color:var(--text-soft);font-size:15px;">Sign in to your safety dashboard.</p>
+      </div>
+
+      <div class="proof-strip">
+        <div class="proof-item"><div class="proof-num">5</div><div class="proof-lbl">Contacts</div></div>
+        <div class="proof-sep"></div>
+        <div class="proof-item"><div class="proof-num">1-Tap</div><div class="proof-lbl">SOS Alert</div></div>
+        <div class="proof-sep"></div>
+        <div class="proof-item"><div class="proof-num">GPS</div><div class="proof-lbl">Live Map</div></div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input id="l-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input id="l-pass" class="form-input" type="password" placeholder="Your password" autocomplete="current-password"/>
+      </div>
+
+      <button id="l-btn" class="btn btn-rose btn-full mt-8" onclick="doLogin()">
+        Sign In to SHEild →
+      </button>
+      <p class="tc mt-24" style="font-size:14px;color:var(--text-muted);">
+        New here? <a class="link" href="register.html">Create a free account</a>
+      </p>
+      <div class="divider"></div>
+      <p class="tc" style="font-size:13px;color:var(--text-dim);font-style:italic;">
+        🔒 Your data is encrypted and never shared.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<script src="script.js"></script>
+<script>
+requireGuest();
+async function doLogin() {
+  const email = fv('l-email'), pass = fv('l-pass');
+  if (!email || !pass) return toast('Enter email and password', 'error');
+  const btn = document.getElementById('l-btn');
+  btn.innerHTML = '<span class="spinner"></span> Signing in...'; btn.disabled = true;
+  try {
+    const res = await apiPost('/login', { email, password: pass });
+    saveUser(res.user);
+    toast('Welcome back, ' + res.user.name + '! 💜', 'success');
+    setTimeout(() => window.location.href = 'dashboard.html', 600);
+  } catch(e) {
+    toast(e.message || 'Login failed', 'error');
+    btn.innerHTML = 'Sign In to SHEild →'; btn.disabled = false;
+  }
+}
+['l-email','l-pass'].forEach(id => {
+  document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+});
+</script>
+</body>
+</html>

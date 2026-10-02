@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Alert History — SHEild</title>
+  <link rel="stylesheet" href="style.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    .hist-page{padding:32px 0 60px}
+    .hist-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px}
+    .hist-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin-bottom:24px}
+    .hist-stat{background:var(--card);border:1px solid var(--border);border-radius:var(--r-md);padding:16px 18px;display:flex;align-items:center;gap:14px}
+    .hist-stat-ico{font-size:24px}
+    .hist-stat-val{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;color:var(--rose);line-height:1}
+    .hist-stat-lbl{font-size:11px;color:var(--text-muted);letter-spacing:1px;font-family:'Rajdhani',sans-serif;font-weight:500;margin-top:3px}
+    #histMap{height:220px;border-radius:var(--r-md);border:1px solid var(--border);margin-bottom:24px}
+  </style>
+</head>
+<body>
+<div class="ambient"><div class="amb-1"></div><div class="amb-2"></div></div>
+
+<nav class="navbar">
+  <a class="nav-brand" href="index.html">
+    <div class="nav-brand-icon">🛡</div>
+    <div class="nav-brand-text">SH<span>E</span>ild</div>
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link" href="dashboard.html">Dashboard</a>
+    <a class="nav-link" href="sos.html">SOS</a>
+    <a class="nav-link active" href="history.html">History</a>
+    <button class="nav-btn" onclick="clearUser();window.location.href='index.html'">Logout</button>
+  </div>
+  <div class="nav-toggle" id="navToggle"><span></span><span></span><span></span></div>
+</nav>
+
+<div class="page-wrap">
+  <div class="container hist-page">
+    <div class="hist-head anim-up">
+      <div>
+        <div class="label mb-6">Safety Record</div>
+        <h1 class="display-title" style="font-size:34px;">Alert History</h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span id="totalBadge" class="badge badge-dim">Loading...</span>
+        <a href="sos.html" class="btn btn-rose btn-sm">🚨 SOS</a>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="hist-stats anim-up d1" id="histStats" style="display:none;">
+      <div class="hist-stat">
+        <div class="hist-stat-ico">🚨</div>
+        <div><div class="hist-stat-val" id="sTot">0</div><div class="hist-stat-lbl">Total Alerts</div></div>
+      </div>
+      <div class="hist-stat">
+        <div class="hist-stat-ico">📅</div>
+        <div><div class="hist-stat-val" id="sLast">—</div><div class="hist-stat-lbl">Last Alert</div></div>
+      </div>
+      <div class="hist-stat">
+        <div class="hist-stat-ico">📍</div>
+        <div><div class="hist-stat-val" id="sLoc">0</div><div class="hist-stat-lbl">Locations</div></div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div id="histMap" style="display:none;"></div>
+
+    <!-- List -->
+    <div id="alertList" class="anim-up d2">
+      <div style="text-align:center;padding:60px 0;"><span class="spinner" style="width:32px;height:32px;border-width:3px;"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<script src="script.js"></script>
+<script>
+requireAuth();
+const user = getUser();
+
+(async()=>{
+  try {
+    const res = await apiGet('/alerts/'+user.id);
+    const alerts = res.alerts;
+    document.getElementById('totalBadge').textContent = alerts.length+' Alert'+(alerts.length===1?'':'s');
+    document.getElementById('totalBadge').className='badge '+(alerts.length>0?'badge-rose':'badge-teal');
+
+    if(alerts.length>0){
+      document.getElementById('histStats').style.display='grid';
+      document.getElementById('sTot').textContent=alerts.length;
+      document.getElementById('sLast').textContent=alerts[0].time.split(' ')[0];
+      const uniq=new Set(alerts.map(a=>a.address||a.latitude+','+a.longitude)).size;
+      document.getElementById('sLoc').textContent=uniq;
+
+      // Map with all pins
+      if(typeof L!=='undefined'){
+        const mapEl=document.getElementById('histMap');
+        mapEl.style.display='block';
+        const hmap=L.map('histMap').setView([alerts[0].latitude,alerts[0].longitude],12);
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'© CartoDB',subdomains:'abcd'}).addTo(hmap);
+        const icon=L.divIcon({className:'',html:`<div style="width:12px;height:12px;border-radius:50%;background:#dc2626;border:2px solid #fff;box-shadow:0 0 12px rgba(220,38,38,0.8);"></div>`,iconSize:[12,12],iconAnchor:[6,6]});
+        alerts.forEach(a=>L.marker([a.latitude,a.longitude],{icon}).addTo(hmap).bindPopup('🕐 '+a.time));
+      }
+    }
+
+    document.getElementById('alertList').innerHTML = alerts.length===0
+      ? '<div class="empty"><div class="empty-icon">🌸</div><div class="empty-text">No alerts yet — stay safe out there!</div></div>'
+      : alerts.map((a,i)=>`<div style="animation-delay:${i*0.05}s">${alertCard(a)}</div>`).join('');
+
+  } catch(e){
+    document.getElementById('alertList').innerHTML='<div class="empty"><div class="empty-icon">⚠️</div><div class="empty-text">Failed to load. Is the server running?</div></div>';
+  }
+})();
+</script>
+</body>
+</html>

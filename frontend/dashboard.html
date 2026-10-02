@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Dashboard — SHEild</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .dash-wrap { display:grid; grid-template-columns:270px 1fr; gap:24px; padding:28px 0 60px; }
+    .sidebar { position:sticky; top:88px; height:fit-content; }
+    .user-card { background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg); padding:28px 20px; text-align:center; margin-bottom:16px; }
+    .user-avatar { width:68px; height:68px; border-radius:50%; background:linear-gradient(135deg,var(--rose),var(--violet)); display:flex; align-items:center; justify-content:center; font-size:26px; font-family:'Rajdhani',sans-serif; font-weight:700; margin:0 auto 12px; box-shadow:0 0 28px var(--rose-glow); }
+    .user-name  { font-family:'Rajdhani',sans-serif; font-size:20px; font-weight:700; margin-bottom:4px; }
+    .user-email { font-size:13px; color:var(--text-muted); margin-bottom:14px; word-break:break-all; }
+    .user-status { display:inline-flex; align-items:center; gap:6px; padding:4px 12px; border-radius:100px; background:rgba(45,212,191,0.1); border:1px solid rgba(45,212,191,0.25); font-family:'Rajdhani',sans-serif; font-size:11px; font-weight:600; letter-spacing:1.5px; color:var(--teal); }
+    .status-dot { width:6px; height:6px; border-radius:50%; background:var(--teal); animation:voicePulse 1.5s infinite; }
+    .snav { background:var(--card); border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; }
+    .snav-item { display:flex; align-items:center; gap:12px; padding:13px 18px; font-family:'Rajdhani',sans-serif; font-size:14px; font-weight:500; letter-spacing:0.5px; color:var(--text-soft); text-decoration:none; border-bottom:1px solid var(--border); transition:all 0.2s; cursor:pointer; }
+    .snav-item:last-child { border-bottom:none; }
+    .snav-item:hover  { background:var(--glass); color:var(--text); }
+    .snav-item.active { color:var(--rose); background:rgba(255,45,110,0.07); }
+    .sec { display:none; }
+    .sec.show { display:block; }
+    .sos-card { background:var(--card); border:1px solid rgba(220,38,38,0.25); border-radius:var(--r-xl); padding:32px; margin-bottom:24px; text-align:center; position:relative; overflow:hidden; }
+    .sos-card::before { content:''; position:absolute; top:-2px; left:15%; right:15%; height:2px; background:linear-gradient(90deg,transparent,#dc2626,transparent); }
+    .sos-btn.sending {
+      background: radial-gradient(circle at 38% 32%,#ff9900,#e65c00 42%,#7a2e00 85%);
+      box-shadow: 0 0 0 4px rgba(230,92,0,0.25),0 0 60px rgba(230,92,0,0.55);
+      animation: sosPulse 0.6s ease-in-out infinite alternate;
+    }
+    @keyframes sosPulse {
+      from { transform: scale(1); }
+      to   { transform: scale(1.04); }
+    }
+    /* AI Voice Box */
+    .voice-ai-box {
+      background: linear-gradient(135deg,rgba(124,58,237,0.15),rgba(255,45,110,0.1));
+      border: 1px solid rgba(124,58,237,0.35);
+      border-radius: var(--r-md);
+      padding: 16px 20px; margin-top: 16px;
+      display: none;
+    }
+    .voice-ai-box.show { display: block; }
+    .voice-ai-title {
+      font-family: 'Rajdhani', sans-serif; font-size: 13px;
+      font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+      color: #a78bfa; margin-bottom: 10px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .voice-ai-text {
+      font-size: 13px; color: var(--text-soft);
+      line-height: 1.8; font-style: italic;
+    }
+    .voice-wave {
+      display: flex; align-items: center;
+      justify-content: center; gap: 4px; margin: 10px 0;
+    }
+    .voice-wave span {
+      display: block; width: 4px; border-radius: 4px;
+      background: #a78bfa;
+      animation: waveBar 0.9s ease-in-out infinite;
+    }
+    .voice-wave span:nth-child(1){ height:8px;  animation-delay:0s }
+    .voice-wave span:nth-child(2){ height:20px; animation-delay:0.1s }
+    .voice-wave span:nth-child(3){ height:30px; animation-delay:0.2s }
+    .voice-wave span:nth-child(4){ height:18px; animation-delay:0.3s }
+    .voice-wave span:nth-child(5){ height:34px; animation-delay:0.15s }
+    .voice-wave span:nth-child(6){ height:22px; animation-delay:0.25s }
+    .voice-wave span:nth-child(7){ height:12px; animation-delay:0.05s }
+    @keyframes waveBar {
+      0%,100%{ transform:scaleY(0.3); opacity:0.4 }
+      50%{ transform:scaleY(1); opacity:1 }
+    }
+    .voice-wave.paused span { animation-play-state:paused; opacity:0.3; }
+    @media(max-width:900px){
+      .dash-wrap { grid-template-columns:1fr; }
+      .sidebar { position:static; }
+    }
+  </style>
+</head>
+<body>
+<div class="ambient"><div class="amb-1"></div><div class="amb-2"></div><div class="amb-3"></div></div>
+<div class="siren-flash" id="sirenFlash"></div>
+
+<nav class="navbar">
+  <a class="nav-brand" href="index.html">
+    <div class="nav-brand-icon">🛡</div>
+    <div class="nav-brand-text">SH<span>E</span>ild</div>
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link active" href="dashboard.html">Dashboard</a>
+    <a class="nav-link" href="sos.html">SOS</a>
+    <a class="nav-link" href="history.html">History</a>
+    <button class="nav-btn" onclick="doLogout()">Logout</button>
+  </div>
+  <div class="nav-toggle" id="navToggle"><span></span><span></span><span></span></div>
+</nav>
+
+<div class="page-wrap">
+  <div class="container">
+    <div class="dash-wrap">
+
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="user-card anim-up">
+          <div class="user-avatar" id="uAvatar">?</div>
+          <div class="user-name"  id="uName">Loading...</div>
+          <div class="user-email" id="uEmail"></div>
+          <div class="user-status"><div class="status-dot"></div>PROTECTED</div>
+        </div>
+        <nav class="snav anim-up d1">
+          <div class="snav-item active" onclick="showSec('home',this)">🏠 Overview</div>
+          <a class="snav-item" href="sos.html">🚨 Emergency SOS</a>
+          <a class="snav-item" href="history.html">📜 Alert History</a>
+          <div class="snav-item" onclick="showSec('contacts',this)">👥 My Contacts</div>
+          <div class="snav-item" style="color:var(--rose);" onclick="doLogout()">🚪 Sign Out</div>
+        </nav>
+      </aside>
+
+      <!-- MAIN -->
+      <main>
+
+        <!-- HOME -->
+        <div class="sec show" id="sec-home">
+
+          <div class="anim-up" style="margin-bottom:24px;">
+            <div class="label mb-8">Good day,</div>
+            <h2 class="display-title" style="font-size:30px;" id="dashGreet">—</h2>
+            <p style="color:var(--text-soft);font-size:15px;margin-top:5px;">
+              Your safety system is active and monitoring.
+            </p>
+          </div>
+
+          <!-- Stats -->
+          <div class="stat-grid anim-up d1">
+            <div class="stat-card">
+              <div class="stat-emoji">🚨</div>
+              <div class="stat-num" id="sAlerts">—</div>
+              <div class="stat-name">Total Alerts</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-emoji">👥</div>
+              <div class="stat-num" id="sContacts">—</div>
+              <div class="stat-name">Contacts</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-emoji">🛡️</div>
+              <div class="stat-num" style="font-size:16px;letter-spacing:1px;">READY</div>
+              <div class="stat-name">System Status</div>
+            </div>
+          </div>
+
+          <!-- SOS Button — fires directly, no page change -->
+          <div class="sos-card anim-up d2">
+            <div class="label mb-8">Emergency SOS</div>
+            <p style="color:var(--text-soft);font-size:14px;margin-bottom:4px;">
+              Press once — AI voice + alert fires instantly. No page change.
+            </p>
+            <div class="sos-arena">
+              <div class="sos-wrap">
+                <div class="sos-ring sos-ring-a"></div>
+                <div class="sos-ring sos-ring-b"></div>
+                <div class="sos-ring sos-ring-c"></div>
+                <button class="sos-btn" id="dashSosBtn" onclick="dashTriggerSOS()">
+                  <span class="sos-label" id="dashSosLabel">SOS</span>
+                  <span class="sos-sub"   id="dashSosSub">TAP TO ALERT</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- AI Voice Box -->
+            <div class="voice-ai-box" id="dashVoiceBox">
+              <div class="voice-ai-title">
+                <span>🤖</span> AI Voice Broadcasting
+              </div>
+              <div class="voice-wave" id="dashVoiceWave">
+                <span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span>
+              </div>
+              <div class="voice-ai-text" id="dashVoiceText">
+                Generating emergency message...
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Recent Alerts -->
+          <div class="anim-up d3">
+            <div class="fbet mb-16">
+              <div class="section-head" style="margin-bottom:0;flex:1;">
+                <span class="section-head-label">Recent Alerts</span>
+                <div class="section-head-line"></div>
+              </div>
+              <a href="history.html" class="btn btn-ghost btn-sm"
+                 style="margin-left:16px;">View All</a>
+            </div>
+            <div id="recentList"></div>
+          </div>
+
+        </div>
+
+        <!-- CONTACTS -->
+        <div class="sec" id="sec-contacts">
+          <div class="anim-up" style="margin-bottom:24px;">
+            <div class="label mb-8">Emergency Contacts</div>
+            <h2 class="display-title" style="font-size:28px;">Your Safety Network</h2>
+            <p style="color:var(--text-soft);font-size:15px;margin-top:6px;">
+              These people are alerted every time you send SOS.
+            </p>
+          </div>
+          <div class="card p-32 anim-up d1">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Contact 1</label>
+                <input id="ec1" class="form-input" type="tel" placeholder="+91 98765 43210"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Contact 2</label>
+                <input id="ec2" class="form-input" type="tel" placeholder="+91 98765 43211"/>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">Contact 3</label>
+                <input id="ec3" class="form-input" type="tel" placeholder="+91 98765 43212"/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Contact 4</label>
+                <input id="ec4" class="form-input" type="tel" placeholder="+91 98765 43213"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contact 5</label>
+              <input id="ec5" class="form-input" type="tel" placeholder="+91 98765 43214"/>
+            </div>
+            <button class="btn btn-rose mt-16" onclick="saveContacts()">
+              💾 Save Contacts
+            </button>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<script src="script.js"></script>
+<script>
+requireAuth();
+const user = getUser();
+document.getElementById('uName').textContent     = user.name;
+document.getElementById('uEmail').textContent    = user.email;
+document.getElementById('dashGreet').textContent = user.name + ' 💜';
+const initials = user.name.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+document.getElementById('uAvatar').textContent   = initials || '👤';
+const contacts = [1,2,3,4,5].map(i=>user['contact'+i]).filter(Boolean);
+document.getElementById('sContacts').textContent = contacts.length;
+
+(async () => {
+  try {
+    const r = await apiGet('/alerts/' + user.id);
+    document.getElementById('sAlerts').textContent = r.alerts.length;
+    const el = document.getElementById('recentList');
+    el.innerHTML = r.alerts.length === 0
+      ? '<div class="empty"><div class="empty-icon">🛡️</div><div class="empty-text">No alerts yet — you are safe!</div></div>'
+      : r.alerts.slice(0,3).map(alertCard).join('');
+  } catch {}
+})();
+
+function showSec(name, el) {
+  document.querySelectorAll('.sec').forEach(s => s.classList.remove('show'));
+  document.getElementById('sec-' + name).classList.add('show');
+  document.querySelectorAll('.snav-item').forEach(s => s.classList.remove('active'));
+  el.classList.add('active');
+  if (name === 'contacts') {
+    [1,2,3,4,5].forEach(i => {
+      const e = document.getElementById('ec' + i);
+      if (e) e.value = user['contact' + i] || '';
+    });
+  }
+}
+
+async function saveContacts() {
+  const data = {
+    contact1: fv('ec1'), contact2: fv('ec2'), contact3: fv('ec3'),
+    contact4: fv('ec4'), contact5: fv('ec5')
+  };
+  try {
+    const res = await apiPut('/user/' + user.id + '/contacts', data);
+    saveUser(res.user); Object.assign(user, res.user);
+    toast('Contacts saved ✓', 'success');
+  } catch(e) { toast(e.message || 'Failed', 'error'); }
+}
+
+// ── SPEAK HELPER ──
+function speakNow(text, lang, rate, onDone) {
+  if (!window.speechSynthesis) { if(onDone) onDone(); return; }
+  window.speechSynthesis.cancel();
+  const msg   = new SpeechSynthesisUtterance(text);
+  msg.lang    = lang;
+  msg.rate    = rate  || 0.88;
+  msg.pitch   = 1.05;
+  msg.volume  = 1.0;
+  msg.onend   = onDone || null;
+  msg.onerror = onDone || null;
+  window.speechSynthesis.speak(msg);
+}
+
+// ── DASHBOARD SOS — fires directly, no page change ──
+let dasBusy = false;
+
+async function dashTriggerSOS() {
+  if (dasBusy) return;
+  dasBusy = true;
+
+  // Button → sending state
+  const btn  = document.getElementById('dashSosBtn');
+  const lbl  = document.getElementById('dashSosLabel');
+  const sub  = document.getElementById('dashSosSub');
+  btn.classList.add('sending');
+  lbl.textContent = '...';
+  sub.textContent = 'SENDING';
+
+  // Show AI voice box
+  const box    = document.getElementById('dashVoiceBox');
+  const wave   = document.getElementById('dashVoiceWave');
+  const textEl = document.getElementById('dashVoiceText');
+  box.classList.add('show');
+  wave.classList.remove('paused');
+
+  const name = user.name || 'User';
+
+  // English voice immediately
+  textEl.innerHTML = `🇬🇧 <strong style="color:#7dd3fc">English:</strong><br/>
+    <em>"Emergency! ${name} needs help. Please call police now!"</em>`;
+
+  speakNow(
+    `Emergency! ${name} needs help immediately. Please call the police or come now!`,
+    'en-US', 0.85,
+    () => {
+      // Hindi after English
+      textEl.innerHTML += `<br/><br/>🇮🇳 <strong style="color:#fda4af">Hindi:</strong><br/>
+        <em>"${name} ko madad chahiye! Police ko bulao!"</em>`;
+      speakNow(
+        `${name} ko madad chahiye! Woh khatre mein hain. Kripya police ko bulao!`,
+        'hi-IN', 0.85,
+        () => {
+          wave.classList.add('paused');
+          textEl.innerHTML += `<br/><br/><span style="color:var(--teal);font-size:12px;font-style:normal;">✅ Voice broadcast complete</span>`;
+        }
+      );
+    }
+  );
+
+  // Siren + Flash immediately
+  playSiren(8);
+  sirenFlash(4000);
+
+  // GPS + Send alert
+  getGPS(async pos => {
+    const lat     = pos.coords.latitude;
+    const lng     = pos.coords.longitude;
+    const address = await reverseGeo(lat, lng);
+    try {
+      const res = await apiPost('/sos', {
+        user_id: user.id, latitude: lat,
+        longitude: lng,   address:  address
+      });
+      const n = res.notifications || {};
+      let sent = [];
+      if (n.sms      > 0) sent.push(`📱 ${n.sms} SMS`);
+      if (n.whatsapp > 0) sent.push(`💬 ${n.whatsapp} WhatsApp`);
+      if (n.email    > 0) sent.push(`📧 ${n.email} Email`);
+      toast(
+        sent.length > 0
+          ? '🚨 SOS SENT! ' + sent.join(', ')
+          : '🚨 SOS saved! Add .env credentials for live notifications.',
+        sent.length > 0 ? 'success' : 'warning', 6000
+      );
+    } catch(e) {
+      toast('SOS failed: ' + (e.message || 'Error'), 'error');
+    }
+  }, () => {
+    toast('⚠️ Location unavailable. Voice alert played.', 'warning');
+  });
+
+  // Reset button after 6s
+  setTimeout(() => {
+    btn.classList.remove('sending');
+    lbl.textContent = 'SOS';
+    sub.textContent = 'TAP TO ALERT';
+    dasBusy = false;
+  }, 6000);
+}
+
+function doLogout() { clearUser(); window.location.href = 'index.html'; }
+</script>
+</body>
+</html>
+```
+
+---
+
+## Ab Kya Hoga
+```
+Dashboard SOS click
+      ↓
+🤖 AI Voice turant — English phir Hindi
+🔊 Siren bajta hai
+🔴 Screen flash
+🚨 GPS + Alert send
+— Koi page change nahi! —

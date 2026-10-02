@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Register — SHEild</title>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    .reg-layout {
+      min-height: calc(100vh - 64px);
+      display: grid; grid-template-columns: 1fr 1fr; align-items: center;
+    }
+    .reg-left { padding: 60px 48px; display:flex; flex-direction:column; justify-content:center; }
+    .reg-card {
+      background:var(--card); border:1px solid var(--border);
+      border-radius:var(--r-xl); padding:40px; backdrop-filter:blur(24px);
+      box-shadow:0 0 80px rgba(0,0,0,0.4); max-width:520px; width:100%;
+    }
+    .reg-right {
+      background:linear-gradient(135deg,rgba(255,45,110,0.08),rgba(124,58,237,0.08));
+      border-left:1px solid var(--border);
+      min-height:calc(100vh - 64px);
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      padding:48px; position:relative; overflow:hidden;
+    }
+    .reg-right::before {
+      content:''; position:absolute; inset:0;
+      background-image:radial-gradient(rgba(255,45,110,0.06) 1px, transparent 1px);
+      background-size:24px 24px;
+    }
+    .perks { position:relative; z-index:1; max-width:340px; }
+    .perk { display:flex; align-items:flex-start; gap:14px; margin-bottom:28px; }
+    .perk-ico {
+      width:40px; height:40px; border-radius:var(--r-sm); flex-shrink:0;
+      background:rgba(255,45,110,0.12); border:1px solid rgba(255,45,110,0.2);
+      display:flex; align-items:center; justify-content:center; font-size:18px;
+    }
+    .perk-title { font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:600; margin-bottom:4px; }
+    .perk-desc { font-size:14px; color:var(--text-soft); line-height:1.5; }
+    @media(max-width:900px) {
+      .reg-layout{grid-template-columns:1fr}
+      .reg-right{display:none}
+      .reg-left{padding:40px 24px}
+    }
+  </style>
+</head>
+<body>
+<div class="ambient"><div class="amb-1"></div><div class="amb-2"></div></div>
+
+<nav class="navbar">
+  <a class="nav-brand" href="index.html">
+    <div class="nav-brand-icon">🛡</div>
+    <div class="nav-brand-text">SH<span>E</span>ild</div>
+  </a>
+  <div class="nav-links" id="navLinks">
+    <a class="nav-link" href="index.html">Home</a>
+    <a class="nav-link" href="login.html">Sign In</a>
+  </div>
+  <div class="nav-toggle" id="navToggle"><span></span><span></span><span></span></div>
+</nav>
+
+<div class="page-wrap">
+  <div class="reg-layout">
+    <!-- Form Side -->
+    <div class="reg-left">
+      <div class="reg-card anim-up">
+        <div style="font-size:40px;margin-bottom:14px;">🛡️</div>
+        <h2 class="display-title" style="font-size:26px;margin-bottom:6px;">Create Account</h2>
+        <p style="color:var(--text-soft);font-size:15px;margin-bottom:28px;">Join SHEild and stay protected everywhere.</p>
+
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input id="r-name" class="form-input" type="text" placeholder="e.g. Priya Sharma" autocomplete="name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address *</label>
+          <input id="r-email" class="form-input" type="email" placeholder="you@example.com" autocomplete="email"/>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Password *</label>
+            <input id="r-pass" class="form-input" type="password" placeholder="Min 6 characters"/>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm *</label>
+            <input id="r-conf" class="form-input" type="password" placeholder="Repeat password"/>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="section-head">
+          <span class="section-head-label">Emergency Contacts <span style="opacity:0.5">(optional)</span></span>
+          <div class="section-head-line"></div>
+        </div>
+        <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;font-style:italic;">Up to 5 contacts notified when you press SOS.</p>
+
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Contact 1</label><input id="c1" class="form-input" type="tel" placeholder="+91 98765 43210"/></div>
+          <div class="form-group"><label class="form-label">Contact 2</label><input id="c2" class="form-input" type="tel" placeholder="+91 98765 43211"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Contact 3</label><input id="c3" class="form-input" type="tel" placeholder="+91 98765 43212"/></div>
+          <div class="form-group"><label class="form-label">Contact 4</label><input id="c4" class="form-input" type="tel" placeholder="+91 98765 43213"/></div>
+        </div>
+        <div class="form-group"><label class="form-label">Contact 5</label><input id="c5" class="form-input" type="tel" placeholder="+91 98765 43214"/></div>
+
+        <button id="r-btn" class="btn btn-rose btn-full mt-16" onclick="doRegister()">
+          Create My Account →
+        </button>
+        <p class="tc mt-16" style="font-size:14px;color:var(--text-muted);">
+          Already registered? <a class="link" href="login.html">Sign In</a>
+        </p>
+      </div>
+    </div>
+
+    <!-- Perks Side -->
+    <div class="reg-right">
+      <div class="perks">
+        <div class="label mb-24">Why thousands trust SHEild</div>
+        <div class="perk anim-up d1">
+          <div class="perk-ico">🚨</div>
+          <div><div class="perk-title">Instant SOS Alerts</div><div class="perk-desc">One press sends your exact GPS to all contacts immediately.</div></div>
+        </div>
+        <div class="perk anim-up d2">
+          <div class="perk-ico">🎤</div>
+          <div><div class="perk-title">Hands-Free Voice SOS</div><div class="perk-desc">Trigger alerts by voice when you can't touch your phone.</div></div>
+        </div>
+        <div class="perk anim-up d3">
+          <div class="perk-ico">📍</div>
+          <div><div class="perk-title">Precise GPS Tracking</div><div class="perk-desc">Live location with address + map link so help arrives exactly where you are.</div></div>
+        </div>
+        <div class="perk anim-up d4">
+          <div class="perk-ico">🔒</div>
+          <div><div class="perk-title">Secure & Private</div><div class="perk-desc">Passwords encrypted. Only your trusted contacts are ever notified.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+<script src="script.js"></script>
+<script>
+requireGuest();
+async function doRegister() {
+  const name=fv('r-name'), email=fv('r-email'), pass=fv('r-pass'), conf=fv('r-conf');
+  if (!name||!email||!pass) return toast('Fill all required fields','error');
+  if (pass!==conf) return toast('Passwords do not match','error');
+  if (pass.length<6) return toast('Password must be at least 6 characters','error');
+  const btn = document.getElementById('r-btn');
+  btn.innerHTML='<span class="spinner"></span> Creating account...'; btn.disabled=true;
+  try {
+    const res = await apiPost('/register',{
+      name,email,password:pass,
+      contact1:fv('c1'),contact2:fv('c2'),contact3:fv('c3'),contact4:fv('c4'),contact5:fv('c5')
+    });
+    saveUser(res.user);
+    toast('Welcome, '+res.user.name+'! 💜','success');
+    setTimeout(()=>window.location.href='dashboard.html',700);
+  } catch(e) {
+    toast(e.message||'Registration failed','error');
+    btn.innerHTML='Create My Account →'; btn.disabled=false;
+  }
+}
+</script>
+</body>
+</html>
